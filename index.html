@@ -3,117 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador Bíblico PDF - RV1960</title>
+    <title>Buscador Bíblico Inteligente - RV1960</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        :root { --primary: #2e7d32; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #2e7d32; text-align: center; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; }
-        button { padding: 12px 20px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #ccc; }
-        #estado { text-align: center; color: #666; font-size: 14px; margin-bottom: 10px; }
-        .versiculo-resultado { background: #f9f9f9; padding: 15px; border-left: 5px solid #2e7d32; margin-bottom: 10px; border-radius: 4px; }
-        .pagina-ref { font-size: 11px; color: #999; display: block; margin-top: 5px; }
-        mark { background: #ffeb3b; padding: 2px; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; }
+        
+        /* Buscador */
+        .search-box { display: flex; gap: 10px; margin: 20px 0; }
+        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { padding: 15px 25px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Barra de Progreso */
+        .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
+        .progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.1s; }
+        #status { text-align: center; font-size: 14px; color: #666; margin-bottom: 10px; }
+
+        /* Resultados */
+        .result-card { background: #fff; border-left: 5px solid var(--primary); padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .result-text { line-height: 1.6; color: #333; font-size: 16px; }
+        .full-text { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #555; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+        .btn-more { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 13px; }
+        .page-info { font-size: 12px; color: #999; margin-top: 10px; display: block; }
+        mark { background: #ffeb3b; padding: 2px; border-radius: 3px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📖 Buscador en PDF RV1960</h1>
-    <p id="estado">Cargando PDF... por favor espera.</p>
+    <h1>📖 Buscador RV1960</h1>
+    <p id="status">Iniciando sistema...</p>
 
-    <div class="search-box">
-        <input type="text" id="inputBusqueda" placeholder="Escribe un tema (ej: fe, amor, esperanza)...">
-        <button id="btnBuscar" onclick="buscarEnPDF()" disabled>BUSCAR EN PDF</button>
+    <div class="progress-container" id="progBox">
+        <div class="progress-bar" id="progBar"></div>
     </div>
 
-    <div id="resultados"></div>
+    <div class="search-box">
+        <input type="text" id="query" placeholder="Ej: 'amor', 'misericordia', 'fe'...">
+        <button id="btnSearch" onclick="startSearch()">BUSCAR</button>
+    </div>
+
+    <div id="results"></div>
 </div>
 
 <script>
-    // Configuración de PDF.js
-    const pdfUrl = 'Santa-Biblia-RV1960-ES.pdf'; // Nombre de tu archivo
+    const pdfUrl = 'Santa-Biblia-RV1960-ES.pdf';
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     let pdfDoc = null;
 
-    // Cargar el PDF al iniciar
+    // Cargar PDF
     pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
         pdfDoc = doc;
-        document.getElementById('estado').innerText = "PDF Cargado. Listo para buscar.";
-        document.getElementById('btnBuscar').disabled = false;
-    }).catch(err => {
-        document.getElementById('estado').innerText = "Error: Asegúrate de que el PDF esté en la misma carpeta y abras esto con un servidor local.";
-        console.error(err);
+        document.getElementById('status').innerText = "Biblia lista. Escribe un tema para buscar.";
+    }).catch(e => {
+        document.getElementById('status').innerText = "Error al cargar el PDF. Verifica el nombre del archivo.";
     });
 
-    async function buscarEnPDF() {
-        const palabra = document.getElementById('inputBusqueda').value.trim();
-        const contenedor = document.getElementById('resultados');
-        const btn = document.getElementById('btnBuscar');
+    async function startSearch() {
+        const query = document.getElementById('query').value.trim();
+        if (query.length < 3) return alert("Escribe una palabra más larga.");
 
-        if (palabra.length < 3) {
-            alert("Escribe al menos 3 letras para buscar.");
-            return;
-        }
+        const resultsDiv = document.getElementById('results');
+        const progBox = document.getElementById('progBox');
+        const progBar = document.getElementById('progBar');
+        const status = document.getElementById('status');
+        const btn = document.getElementById('btnSearch');
 
-        contenedor.innerHTML = "";
+        resultsDiv.innerHTML = "";
+        progBox.style.display = "block";
         btn.disabled = true;
-        document.getElementById('estado').innerText = "Escaneando páginas de la Biblia...";
-
-        let hallazgos = 0;
-
-        // Recorremos todas las páginas del PDF
-        for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i);
-            const content = await page.getTextContent();
-            const text = content.items.map(item => item.str).join(" ");
-
-            // Si el texto contiene la palabra (ignorando mayúsculas/minúsculas)
-            if (text.toLowerCase().includes(palabra.toLowerCase())) {
-                hallazgos++;
-                
-                // Extraer un fragmento del texto donde aparece la palabra
-                const index = text.toLowerCase().indexOf(palabra.toLowerCase());
-                const fragmento = text.substring(index - 100, index + 200); // Tomamos contexto alrededor
-
-                const div = document.createElement('div');
-                div.className = 'versiculo-resultado';
-                
-                // Resaltar la palabra buscada
-                const regex = new RegExp(`(${palabra})`, 'gi');
-                const textoResaltado = fragmento.replace(regex, '<mark>$1</mark>');
-
-                div.innerHTML = `
-                    <span>...${textoResaltado}...</span>
-                    <span class="pagina-ref">Encontrado en la Página ${i} del PDF</span>
-                `;
-                contenedor.appendChild(div);
-
-                // Límite para no saturar la pantalla si hay cientos de resultados
-                if (hallazgos >= 50) {
-                    document.getElementById('estado').innerText = "Se encontraron muchos resultados. Mostrando los primeros 50.";
-                    break;
-                }
-            }
-            
-            // Actualizar progreso cada 50 páginas
-            if (i % 50 === 0) {
-                document.getElementById('estado').innerText = `Buscando... página ${i} de ${pdfDoc.numPages}`;
-            }
-        }
-
-        if (hallazgos === 0) {
-            document.getElementById('estado').innerText = "No se encontraron resultados.";
-        } else if (hallazgos < 50) {
-            document.getElementById('estado').innerText = `Se encontraron ${hallazgos} menciones de "${palabra}".`;
-        }
         
+        let totalPages = pdfDoc.numPages;
+        let foundCount = 0;
+
+        for (let i = 1; i <= totalPages; i++) {
+            // Actualizar barra de progreso
+            let pct = (i / totalPages) * 100;
+            progBar.style.width = pct + "%";
+            status.innerText = `Buscando en página ${i} de ${totalPages}...`;
+
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(" ");
+
+            if (pageText.toLowerCase().includes(query.toLowerCase())) {
+                foundCount++;
+                createResultCard(pageText, query, i, resultsDiv);
+                if (foundCount >= 30) break; // Limite de seguridad
+            }
+        }
+
+        status.innerText = `Búsqueda finalizada. Se encontraron ${foundCount} resultados.`;
         btn.disabled = false;
+        if (foundCount >= 30) status.innerText += " (Se muestran los primeros 30)";
+    }
+
+    function createResultCard(text, query, pageNum, container) {
+        const index = text.toLowerCase().indexOf(query.toLowerCase());
+        
+        // El "snippet" o fragmento corto
+        const start = Math.max(0, index - 60);
+        const end = Math.min(text.length, index + 100);
+        let snippet = text.substring(start, end);
+
+        // El texto completo del versículo/párrafo (más amplio)
+        const fullStart = Math.max(0, index - 300);
+        const fullEnd = Math.min(text.length, index + 500);
+        let fullContext = text.substring(fullStart, fullEnd);
+
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        
+        const regex = new RegExp(`(${query})`, 'gi');
+        const highlightedSnippet = snippet.replace(regex, '<mark>$1</mark>');
+        const highlightedFull = fullContext.replace(regex, '<mark>$1</mark>');
+
+        card.innerHTML = `
+            <div class="result-text">...${highlightedSnippet}...</div>
+            <button class="btn-more" onclick="this.nextElementSibling.style.display='block'; this.style.display='none'">
+                📖 Leer versículo completo
+            </button>
+            <div class="full-text">
+                <strong>Contexto ampliado:</strong><br>
+                ...${highlightedFull}...
+                <span class="page-info">Ubicación aproximada: Página ${pageNum} del PDF</span>
+            </div>
+        `;
+        container.appendChild(card);
     }
 </script>
 

@@ -3,47 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador Bíblico Inteligente - RV1960</title>
+    <title>Buscador Bíblico Referenciado - RV1960</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        :root { --primary: #2e7d32; --bg: #f0f2f5; }
+        :root { --primary: #2e7d32; --accent: #d32f2f; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .container { background: white; width: 100%; max-width: 850px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         h1 { color: var(--primary); text-align: center; margin-bottom: 5px; }
         
-        /* Buscador */
         .search-box { display: flex; gap: 10px; margin: 20px 0; }
         input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--primary); }
         button { padding: 15px 25px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-
-        /* Barra de Progreso */
+        
         .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.1s; }
+        .progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 5px; }
         #status { text-align: center; font-size: 14px; color: #666; margin-bottom: 10px; }
 
-        /* Resultados */
-        .result-card { background: #fff; border-left: 5px solid var(--primary); padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .result-text { line-height: 1.6; color: #333; font-size: 16px; }
-        .full-text { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #555; background: #f9f9f9; padding: 10px; border-radius: 5px; }
-        .btn-more { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 13px; }
-        .page-info { font-size: 12px; color: #999; margin-top: 10px; display: block; }
-        mark { background: #ffeb3b; padding: 2px; border-radius: 3px; }
+        .result-card { background: #fff; border-top: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        
+        /* Estilo para la Referencia: Libro + Capítulo + Versículo */
+        .reference-header { 
+            background: #e8f5e9; color: #2e7d32; padding: 5px 15px; border-radius: 5px; 
+            font-weight: bold; font-size: 18px; margin-bottom: 10px; display: inline-block;
+        }
+        
+        .verse-text { line-height: 1.7; color: #333; font-size: 16px; border-left: 3px solid #ddd; padding-left: 15px; }
+        mark { background: #fff176; padding: 2px; border-radius: 3px; font-weight: bold; }
+        .page-tag { font-size: 11px; color: #999; float: right; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📖 Buscador RV1960</h1>
-    <p id="status">Iniciando sistema...</p>
+    <h1>📖 Buscador de Versículos RV1960</h1>
+    <p id="status">Cargando Biblia... por favor espera.</p>
 
     <div class="progress-container" id="progBox">
         <div class="progress-bar" id="progBar"></div>
     </div>
 
     <div class="search-box">
-        <input type="text" id="query" placeholder="Ej: 'amor', 'misericordia', 'fe'...">
+        <input type="text" id="query" placeholder="Escribe un tema (ej: amor, fe, perdón)...">
         <button id="btnSearch" onclick="startSearch()">BUSCAR</button>
     </div>
 
@@ -57,36 +57,29 @@
 
     let pdfDoc = null;
 
-    // Cargar PDF
+    // Listado de libros para ayudar a la detección
+    const librosBiblia = ["Génesis", "Éxodo", "Levítico", "Números", "Deuteronomio", "Josué", "Jueces", "Rut", "1 Samuel", "2 Samuel", "1 Reyes", "2 Reyes", "1 Crónicas", "2 Crónicas", "Esdras", "Nehemías", "Ester", "Job", "Salmos", "Proverbios", "Eclesiastés", "Cantares", "Isaías", "Jeremías", "Lamentaciones", "Ezequiel", "Daniel", "Oseas", "Joel", "Amós", "Abdías", "Jonás", "Miqueas", "Nahúm", "Habacuc", "Sofonías", "Hageo", "Zacarías", "Malaquías", "Mateo", "Marcos", "Lucas", "Juan", "Hechos", "Romanos", "1 Corintios", "2 Corintios", "Gálatas", "Efesios", "Filipenses", "Colosenses", "1 Tesalonicenses", "2 Tesalonicenses", "1 Timoteo", "2 Timoteo", "Tito", "Filemón", "Hebreos", "Santiago", "1 Pedro", "2 Pedro", "1 Juan", "2 Juan", "3 Juan", "Judas", "Apocalipsis"];
+
     pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
         pdfDoc = doc;
-        document.getElementById('status').innerText = "Biblia lista. Escribe un tema para buscar.";
-    }).catch(e => {
-        document.getElementById('status').innerText = "Error al cargar el PDF. Verifica el nombre del archivo.";
+        document.getElementById('status').innerText = "Biblia cargada. Lista para buscar referencias.";
     });
 
     async function startSearch() {
         const query = document.getElementById('query').value.trim();
-        if (query.length < 3) return alert("Escribe una palabra más larga.");
+        if (query.length < 3) return;
 
         const resultsDiv = document.getElementById('results');
-        const progBox = document.getElementById('progBox');
         const progBar = document.getElementById('progBar');
         const status = document.getElementById('status');
-        const btn = document.getElementById('btnSearch');
-
-        resultsDiv.innerHTML = "";
-        progBox.style.display = "block";
-        btn.disabled = true;
         
-        let totalPages = pdfDoc.numPages;
+        resultsDiv.innerHTML = "";
+        document.getElementById('progBox').style.display = "block";
         let foundCount = 0;
 
-        for (let i = 1; i <= totalPages; i++) {
-            // Actualizar barra de progreso
-            let pct = (i / totalPages) * 100;
-            progBar.style.width = pct + "%";
-            status.innerText = `Buscando en página ${i} de ${totalPages}...`;
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            progBar.style.width = (i / pdfDoc.numPages * 100) + "%";
+            status.innerText = `Escaneando página ${i}...`;
 
             const page = await pdfDoc.getPage(i);
             const textContent = await page.getTextContent();
@@ -94,46 +87,47 @@
 
             if (pageText.toLowerCase().includes(query.toLowerCase())) {
                 foundCount++;
-                createResultCard(pageText, query, i, resultsDiv);
-                if (foundCount >= 30) break; // Limite de seguridad
+                
+                // INTENTAR DETECTAR EL LIBRO Y CAPÍTULO EN ESTA PÁGINA
+                let libroDetectado = "Desconocido";
+                for (let libro of librosBiblia) {
+                    if (pageText.includes(libro.toUpperCase()) || pageText.includes(libro)) {
+                        libroDetectado = libro;
+                    }
+                }
+
+                // Intentar encontrar el número de capítulo (Busca palabras como "Génesis 1" o "Capítulo 1")
+                const capMatch = pageText.match(new RegExp(`${libroDetectado}\\s+(\\d+)`, 'i')) || pageText.match(/Capítulo\s+(\d+)/i);
+                let capitulo = capMatch ? capMatch[1] : "?";
+
+                // Buscar el versículo (el número pequeño antes de la palabra)
+                const index = pageText.toLowerCase().indexOf(query.toLowerCase());
+                const preText = pageText.substring(Math.max(0, index - 50), index);
+                const versiculoMatch = preText.match(/(\d+)\s+/g);
+                let versiculo = versiculoMatch ? versiculoMatch[versiculoMatch.length - 1].trim() : "X";
+
+                createResultCard(libroDetectado, capitulo, versiculo, pageText, query, i, resultsDiv);
+                
+                if (foundCount >= 20) break;
             }
         }
-
-        status.innerText = `Búsqueda finalizada. Se encontraron ${foundCount} resultados.`;
-        btn.disabled = false;
-        if (foundCount >= 30) status.innerText += " (Se muestran los primeros 30)";
+        status.innerText = `Búsqueda finalizada. Se encontraron ${foundCount} referencias.`;
     }
 
-    function createResultCard(text, query, pageNum, container) {
+    function createResultCard(libro, cap, ver, text, query, page, container) {
         const index = text.toLowerCase().indexOf(query.toLowerCase());
+        const context = text.substring(Math.max(0, index - 150), Math.min(text.length, index + 300));
         
-        // El "snippet" o fragmento corto
-        const start = Math.max(0, index - 60);
-        const end = Math.min(text.length, index + 100);
-        let snippet = text.substring(start, end);
-
-        // El texto completo del versículo/párrafo (más amplio)
-        const fullStart = Math.max(0, index - 300);
-        const fullEnd = Math.min(text.length, index + 500);
-        let fullContext = text.substring(fullStart, fullEnd);
-
         const card = document.createElement('div');
         card.className = 'result-card';
         
         const regex = new RegExp(`(${query})`, 'gi');
-        const highlightedSnippet = snippet.replace(regex, '<mark>$1</mark>');
-        const highlightedFull = fullContext.replace(regex, '<mark>$1</mark>');
+        const highlighted = context.replace(regex, '<mark>$1</mark>');
 
         card.innerHTML = `
-            <div class="result-text">...${highlightedSnippet}...</div>
-            <button class="btn-more" onclick="this.nextElementSibling.style.display='block'; this.style.display='none'">
-                📖 Leer versículo completo
-            </button>
-            <div class="full-text">
-                <strong>Contexto ampliado:</strong><br>
-                ...${highlightedFull}...
-                <span class="page-info">Ubicación aproximada: Página ${pageNum} del PDF</span>
-            </div>
+            <div class="reference-header">${libro} ${cap}:${ver}</div>
+            <span class="page-tag">Pág. ${page}</span>
+            <div class="verse-text">"...${highlighted}..."</div>
         `;
         container.appendChild(card);
     }

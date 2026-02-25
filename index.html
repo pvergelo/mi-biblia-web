@@ -3,92 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consejero Bíblico RV1960 + Inteligencia NotebookLM</title>
+    <title>Consejero Bíblico RV1960 + NotebookLM</title>
     <style>
-        :root { --primary: #2e7d32; --accent: #1565c0; --notebook: #673ab7; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 850px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        
-        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 0.9em; }
+        :root { 
+            --primary: #2e7d32; 
+            --accent: #1565c0; 
+            --notebook: #673ab7; 
+            --bg: #f0f2f5; 
+            --white: #ffffff;
+        }
 
-        /* Sección NotebookLM */
-        .notebook-box { 
-            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+        }
+
+        .container { 
+            background: var(--white); 
+            width: 100%; 
+            max-width: 850px; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+        }
+        
+        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; font-size: 2rem; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 1rem; }
+
+        /* Sección NotebookLM - Caja Destacada */
+        .notebook-section { 
+            background: linear-gradient(135deg, #ede7f6 0%, #d1c4e9 100%);
             border: 2px solid var(--notebook);
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            box-shadow: 0 4px 15px rgba(103, 58, 183, 0.1);
         }
+
         .btn-notebook { 
-            background: var(--notebook); color: white; border: none; padding: 12px 25px; 
-            border-radius: 30px; cursor: pointer; font-weight: bold; text-decoration: none;
-            display: inline-flex; align-items: center; gap: 10px; transition: 0.3s;
+            background: var(--notebook); 
+            color: white; 
+            border: none; 
+            padding: 14px 30px; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-decoration: none;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 10px; 
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            margin-top: 10px;
         }
-        .btn-notebook:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(103, 58, 183, 0.3); }
 
-        /* Botones de Temas */
-        .tags-container { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-            gap: 12px; margin-bottom: 25px; background: #fafafa; padding: 20px; border-radius: 15px;
+        .btn-notebook:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 6px 20px rgba(103, 58, 183, 0.4);
+            background: #5e35b1;
         }
+
+        /* Grid de Temas (Botones) */
+        .tags-title { font-weight: bold; color: #444; margin-bottom: 10px; display: block; text-align: center; }
+        .tags-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+            gap: 12px; 
+            margin-bottom: 25px; 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 15px;
+            border: 1px solid #eee;
+        }
+
         .tag-btn { 
-            background: white; border: 1px solid #ddd; padding: 12px; border-radius: 10px; 
-            cursor: pointer; font-size: 14px; transition: 0.3s; text-align: center;
+            background: var(--white); 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease; 
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .tag-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
 
-        .btn-main { width: 100%; background: var(--accent); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 16px; margin-bottom: 20px; }
+        .tag-btn:hover { border-color: var(--primary); background: #f1f8e9; }
+        .tag-btn.active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+            font-weight: bold;
+            transform: scale(0.98);
+        }
+
+        .btn-main { 
+            width: 100%; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 1.1rem; 
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+
+        .btn-main:hover { background: #0d47a1; }
         
-        .result-card { background: white; border-top: 6px solid var(--primary); padding: 25px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); animation: slideUp 0.4s ease-out; }
-        .ref { font-weight: bold; color: var(--primary); font-size: 1.3em; display: block; }
-        .text { line-height: 1.8; color: #333; font-style: italic; background: #fdfdfd; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        /* Estilo de los Resultados (Tarjetas) */
+        .result-card { 
+            background: var(--white); 
+            border-left: 6px solid var(--primary); 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+            animation: fadeIn 0.5s ease-out; 
+        }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .ref { font-weight: bold; color: var(--primary); font-size: 1.3rem; margin-bottom: 12px; display: block; }
+        .text { 
+            line-height: 1.8; 
+            color: #333; 
+            font-style: italic; 
+            font-size: 1.1rem; 
+            background: #fdfdfd; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #f0f0f0;
+        }
+
+        .reflection { 
+            margin-top: 15px; 
+            font-size: 0.95rem; 
+            color: #1565c0; 
+            padding-top: 12px; 
+            border-top: 1px dashed #ccc;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 600px) {
+            .tags-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>📖 Consejero Bíblico RV1960</h1>
-    <p class="subtitle">Guía espiritual basada en la Biblia y NotebookLM</p>
+    <p class="subtitle">Encuentra respuestas en la Palabra de Dios y en mi Cuaderno Inteligente</p>
 
-    <div class="notebook-box">
-        <h3 style="color: var(--notebook); margin-top: 0;">🧠 ¿Necesitas un estudio más profundo?</h3>
-        <p style="font-size: 0.9em; color: #555;">Accede a mi cuaderno interactivo donde la IA te ayudará a analizar mis notas y la Biblia a fondo.</p>
+    <!-- INTEGRACIÓN CON NOTEBOOKLM -->
+    <div class="notebook-section">
+        <h3 style="color: var(--notebook); margin-top: 0;">🧠 ¿Deseas un estudio profundo?</h3>
+        <p style="color: #555; font-size: 0.95rem;">Utiliza la Inteligencia Artificial de mi cuaderno de NotebookLM para hacerme preguntas complejas sobre este tema.</p>
         <a href="https://notebooklm.google.com/notebook/c060a20f-981c-4bc5-9d6b-f579c65bb6fa" target="_blank" class="btn-notebook">
-            📘 ABRIR NOTEBOOKLM INTERACTIVO
+            📘 ENTRAR AL CUADERNO INTERACTIVO
         </a>
     </div>
 
     <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 25px;">
 
-    <div class="tags-container" id="grid"></div>
-    <button class="btn-main" onclick="mostrarConsejos()">OBTENER GUÍA RÁPIDA</button>
+    <span class="tags-title">¿Qué estás sintiendo hoy? (Selecciona temas)</span>
+    <div class="tags-grid" id="grid"></div>
+
+    <button class="btn-main" onclick="generarGuia()">GENERAR GUÍA ESPIRITUAL</button>
+
     <div id="resultados"></div>
 </div>
 
 <script>
-    const datos = [
-        { id: "hogar", label: "🏠 Hogar", ref: "Josué 24:15", texto: "Y si mal os parece servir a Jehová, escogeos hoy a quién sirváis... pero yo y mi casa serviremos a Jehová." },
-        { id: "ansiedad", label: "🧘 Ansiedad", ref: "Filipenses 4:6-7", texto: "Por nada estéis afanosos, sino sean conocidas vuestras peticiones delante de Dios en toda oración y ruego, con acción de gracias." },
-        { id: "finanzas", label: "💰 Finanzas", ref: "Mateo 6:33", texto: "Mas buscad primeramente el reino de Dios y su justicia, y todas estas cosas os serán añadidas." },
-        { id: "miedo", label: "🛡️ Miedo", ref: "Isaías 41:10", texto: "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo." },
-        { id: "salud", label: "🏥 Salud", ref: "Salmos 103:2-3", texto: "Bendice, alma mía, a Jehová... El es quien perdona todas tus iniquidades, el que sana todas tus dolencias." },
-        { id: "perdon", label: "🤝 Perdón", ref: "Efesios 4:32", texto: "Antes sed benignos unos con otros... perdonándoos unos a otros, como Dios también os perdonó a vosotros en Cristo." },
-        { id: "paz", label: "🕊️ Paz", ref: "Juan 14:27", texto: "La paz os dejo, mi paz os doy; yo no os la doy como el mundo la da." },
-        { id: "esperanza", label: "⚓ Esperanza", ref: "Jeremías 29:11", texto: "Porque yo sé los pensamientos que tengo acerca de vosotros... pensamientos de paz, y no de mal." }
+    // Diccionario de 20 Temas (Base de Datos integrada para evitar errores de carga)
+    const biblioteca = [
+        { id: "hogar", label: "🏠 Hogar", ref: "Josué 24:15", texto: "Y si mal os parece servir a Jehová, escogeos hoy a quién sirváis... pero yo y mi casa serviremos a Jehová.", nota: "La paz familiar comienza con una decisión espiritual firme." },
+        { id: "ansiedad", label: "🧘 Ansiedad", ref: "Filipenses 4:6-7", texto: "Por nada estéis afanosos, sino sean conocidas vuestras peticiones delante de Dios en toda oración y ruego, con acción de gracias.", nota: "La gratitud en la oración es el remedio contra el afán." },
+        { id: "finanzas", label: "💰 Finanzas", ref: "Filipenses 4:19", texto: "Mi Dios, pues, suplirá todo lo que os falte conforme a sus riquezas en gloria en Cristo Jesús.", nota: "Tu provisión depende de la riqueza de Dios, no de la economía del mundo." },
+        { id: "salud", label: "🏥 Salud", ref: "Santiago 5:15", texto: "Y la oración de fe salvará al enfermo, y el Señor lo levantará; y si hubiere cometido pecados, le serán perdonados.", nota: "La fe es un ingrediente vital en el proceso de restauración física." },
+        { id: "miedo", label: "🛡️ Miedo", ref: "Isaías 41:10", texto: "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo; siempre te ayudaré, siempre te sustentaré.", nota: "Dios no solo está contigo, sino que Él es quien te sostiene activamente." },
+        { id: "tristeza", label: "😢 Tristeza", ref: "Salmos 34:18", texto: "Cercano está Jehová a los quebrantados de corazón; y salva a los contritos de espíritu.", nota: "Dios se especializa en restaurar corazones que se sienten rotos." },
+        { id: "perdon", label: "🤝 Perdón", ref: "Efesios 4:32", texto: "Antes sed benignos unos con otros, misericordiosos, perdonándoos unos a otros, como Dios también os perdonó a vosotros en Cristo.", nota: "El perdón es un regalo que te haces a ti mismo para ser libre." },
+        { id: "fe", label: "✨ Fe", ref: "Hebreos 11:1", texto: "Es, pues, la fe la certeza de lo que se espera, la convicción de lo que no se ve.", nota: "Tener fe es ver con los ojos del espíritu lo que aún no es real en lo físico." },
+        { id: "paz", label: "🕊️ Paz", ref: "Juan 14:27", texto: "La paz os dejo, mi paz os doy; yo no os la doy como el mundo la da. No se turbe vuestro corazón, ni tenga miedo.", nota: "Su paz es un regalo interno que no depende de las circunstancias externas." },
+        { id: "hijos", label: "👶 Hijos", ref: "Salmos 127:3", texto: "He aquí, herencia de Jehová son los hijos; cosa de estima el fruto del vientre.", nota: "Los hijos son un tesoro prestado que Dios nos confía para guiar." },
+        { id: "matrimonio", label: "💍 Matrimonio", ref: "Mateo 19:6", texto: "Así que no son ya más dos, sino una sola carne; por tanto, lo que Dios juntó, no lo separe el hombre.", nota: "El matrimonio es un pacto sagrado diseñado para la unidad permanente." },
+        { id: "soledad", label: "🚶 Soledad", ref: "Josué 1:9", texto: "Mira que te mando que te esfuerces y seas valiente... porque Jehová tu Dios estará contigo en dondequiera que vayas.", nota: "La soledad es un sentimiento, pero la compañía de Dios es una realidad constante." },
+        { id: "rabia", label: "🔥 Rabia", ref: "Proverbios 15:1", texto: "La blanda respuesta quita la ira; mas la palabra áspera hace subir el furor.", nota: "Tú tienes el poder de apagar fuegos ajenos con tu mansedumbre." },
+        { id: "sabiduria", label: "💡 Sabiduría", ref: "Santiago 1:5", texto: "Y si alguno de vosotros tiene falta de sabiduría, pídala a Dios, el cual da a todos abundantemente.", nota: "La dirección correcta está a una oración de distancia." },
+        { id: "fortaleza", label: "💪 Fortaleza", ref: "Filipenses 4:13", texto: "Todo lo puedo en Cristo que me fortalece.", nota: "Tu resistencia no viene de tus músculos, sino de tu dependencia en Dios." },
+        { id: "futuro", label: "⚓ Futuro", ref: "Jeremías 29:11", texto: "Porque yo sé los pensamientos que tengo acerca de vosotros... pensamientos de paz, y no de mal, para daros el fin que esperáis.", nota: "Dios ya está en tu futuro preparando el camino de bienestar." },
+        { id: "trabajo", label: "🛠️ Trabajo", ref: "Colosenses 3:23", texto: "Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres.", nota: "La excelencia laboral es una forma de honrar a Dios cada día." },
+        { id: "paciencia", label: "⏳ Paciencia", ref: "Gálatas 6:9", texto: "No nos cansemos, pues, de hacer bien; porque a su tiempo segaremos, si no desmayamos.", nota: "La cosecha espiritual nunca llega tarde, llega a su tiempo." },
+        { id: "proteccion", label: "🛡️ Protección", ref: "Salmos 91:1-2", texto: "El que habita al abrigo del Altísimo morará bajo la sombra del Omnipotente. Diré yo a Jehová: Esperanza mía.", nota: "Tu seguridad no depende de tus fuerzas, sino de quién te cuida." },
+        { id: "amor", label: "❤️ Amor", ref: "1 Corintios 13:4", texto: "El amor es sufrido, es benigno; el amor no tiene envidia, el amor no es jactancioso, no se envanece.", nota: "El amor real se demuestra en la paciencia y el servicio a los demás." }
     ];
 
     let seleccionados = new Set();
 
-    function cargarBotones() {
+    // Crear los botones
+    function inicializarApp() {
         const grid = document.getElementById('grid');
-        datos.forEach(tema => {
+        biblioteca.forEach(tema => {
             const btn = document.createElement('button');
             btn.className = 'tag-btn';
             btn.innerText = tema.label;
@@ -100,27 +223,39 @@
                     seleccionados.add(tema.id);
                     btn.classList.add('active');
                 }
-            }
+            };
             grid.appendChild(btn);
         });
     }
 
-    function mostrarConsejos() {
+    // Mostrar los versículos
+    function generarGuia() {
         const contenedor = document.getElementById('resultados');
         contenedor.innerHTML = "";
-        if(seleccionados.size === 0) return alert("Selecciona un tema.");
+        
+        if (seleccionados.size === 0) {
+            alert("Por favor, elige al menos un tema para darte un consejo.");
+            return;
+        }
 
         seleccionados.forEach(id => {
-            const item = datos.find(d => d.id === id);
-            contenedor.innerHTML += `
-                <div class="result-card">
-                    <span class="ref">📍 ${item.ref}</span>
-                    <div class="text">"${item.texto}"</div>
-                </div>`;
+            const item = biblioteca.find(d => d.id === id);
+            const card = document.createElement('div');
+            card.className = 'result-card';
+            card.innerHTML = `
+                <span class="ref">📍 ${item.ref}</span>
+                <div class="text">"${item.texto}"</div>
+                <div class="reflection"><strong>💡 Reflexión:</strong> ${item.nota}</div>
+            `;
+            contenedor.appendChild(card);
         });
+
+        // Desplazar suavemente a los resultados
+        window.scrollTo({ top: contenedor.offsetTop - 30, behavior: 'smooth' });
     }
 
-    cargarBotones();
+    inicializarApp();
 </script>
+
 </body>
 </html>

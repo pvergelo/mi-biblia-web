@@ -3,51 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador Bíblico Referenciado - RV1960</title>
+    <title>Consejero Bíblico Multi-Tema</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
-        :root { --primary: #2e7d32; --accent: #d32f2f; --bg: #f0f2f5; }
+        :root { --primary: #2e7d32; --accent: #1565c0; --bg: #f0f2f5; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; width: 100%; max-width: 850px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .container { background: white; width: 100%; max-width: 850px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h1 { color: var(--primary); text-align: center; margin-bottom: 5px; }
-        
-        .search-box { display: flex; gap: 10px; margin: 20px 0; }
-        input { flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; }
-        button { padding: 15px 25px; background: var(--primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        
-        .progress-container { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
-        .progress-bar { width: 0%; height: 100%; background: var(--primary); border-radius: 5px; }
-        #status { text-align: center; font-size: 14px; color: #666; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 25px; }
 
-        .result-card { background: #fff; border-top: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        
-        /* Estilo para la Referencia: Libro + Capítulo + Versículo */
-        .reference-header { 
-            background: #e8f5e9; color: #2e7d32; padding: 5px 15px; border-radius: 5px; 
-            font-weight: bold; font-size: 18px; margin-bottom: 10px; display: inline-block;
+        /* Panel de 20 Botones */
+        .tags-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+            gap: 10px; 
+            margin-bottom: 25px; 
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #eee;
         }
-        
-        .verse-text { line-height: 1.7; color: #333; font-size: 16px; border-left: 3px solid #ddd; padding-left: 15px; }
-        mark { background: #fff176; padding: 2px; border-radius: 3px; font-weight: bold; }
-        .page-tag { font-size: 11px; color: #999; float: right; }
+        .tag-btn { 
+            background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px; 
+            cursor: pointer; font-size: 13px; transition: 0.3s; text-align: center;
+        }
+        .tag-btn:hover { border-color: var(--primary); background: #f1f8e9; }
+        .tag-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
+
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-search { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .btn-search:disabled { background: #ccc; }
+
+        /* Resultados */
+        .card-result { background: white; border-top: 5px solid var(--primary); padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); animation: fadeIn 0.5s; }
+        .ref-header { font-weight: bold; color: var(--primary); font-size: 18px; margin-bottom: 8px; display: block; }
+        .verse-text { line-height: 1.7; color: #333; font-style: italic; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+        .advice { margin-top: 10px; font-size: 14px; color: #1565c0; font-weight: 500; }
+
+        #status { text-align: center; font-size: 14px; color: #666; margin-bottom: 10px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📖 Buscador de Versículos RV1960</h1>
-    <p id="status">Cargando Biblia... por favor espera.</p>
+    <h1>🙏 Guía Bíblica Personalizada</h1>
+    <p class="subtitle">Selecciona uno o varios temas sobre los que necesites consejo:</p>
 
-    <div class="progress-container" id="progBox">
-        <div class="progress-bar" id="progBar"></div>
+    <div id="status">Cargando PDF...</div>
+
+    <div class="tags-container" id="panelTemas"></div>
+
+    <div class="action-bar">
+        <span id="contador">0 temas seleccionados</span>
+        <button class="btn-search" id="btnRun" onclick="buscarMultiplesTemas()" disabled>OBTENER CONSEJO BÍBLICO</button>
     </div>
 
-    <div class="search-box">
-        <input type="text" id="query" placeholder="Escribe un tema (ej: amor, fe, perdón)...">
-        <button id="btnSearch" onclick="startSearch()">BUSCAR</button>
-    </div>
-
-    <div id="results"></div>
+    <div id="resultados"></div>
 </div>
 
 <script>
@@ -56,80 +68,105 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
     let pdfDoc = null;
+    let seleccionados = new Set();
 
-    // Listado de libros para ayudar a la detección
-    const librosBiblia = ["Génesis", "Éxodo", "Levítico", "Números", "Deuteronomio", "Josué", "Jueces", "Rut", "1 Samuel", "2 Samuel", "1 Reyes", "2 Reyes", "1 Crónicas", "2 Crónicas", "Esdras", "Nehemías", "Ester", "Job", "Salmos", "Proverbios", "Eclesiastés", "Cantares", "Isaías", "Jeremías", "Lamentaciones", "Ezequiel", "Daniel", "Oseas", "Joel", "Amós", "Abdías", "Jonás", "Miqueas", "Nahúm", "Habacuc", "Sofonías", "Hageo", "Zacarías", "Malaquías", "Mateo", "Marcos", "Lucas", "Juan", "Hechos", "Romanos", "1 Corintios", "2 Corintios", "Gálatas", "Efesios", "Filipenses", "Colosenses", "1 Tesalonicenses", "2 Tesalonicenses", "1 Timoteo", "2 Timoteo", "Tito", "Filemón", "Hebreos", "Santiago", "1 Pedro", "2 Pedro", "1 Juan", "2 Juan", "3 Juan", "Judas", "Apocalipsis"];
+    // DICCIONARIO DE 20 PALABRAS CLAVE CON CITAS ESTRATÉGICAS
+    const diccionario = [
+        { id: "hogar", label: "🏠 Hogar", cita: "Josué 24:15", consejo: "La paz del hogar nace de servir a Dios juntos." },
+        { id: "ansiedad", label: "🧘 Ansiedad", cita: "Filipenses 4:6", consejo: "Cambia tu preocupación por oración con gratitud." },
+        { id: "finanzas", label: "💰 Finanzas", cita: "Filipenses 4:19", consejo: "Dios suplirá lo que te falte según su riqueza." },
+        { id: "salud", label: "🏥 Salud", cita: "Santiago 5:15", consejo: "La fe y la oración sostienen al enfermo." },
+        { id: "miedo", label: "🛡️ Miedo", cita: "Isaías 41:10", consejo: "No temas, Su mano derecha te sostiene." },
+        { id: "tristeza", label: "😢 Tristeza", cita: "Salmos 34:18", consejo: "Él está cerca de los quebrantados de corazón." },
+        { id: "perdon", label: "🤝 Perdón", cita: "Efesios 4:32", consejo: "Perdonar te libera así como Dios te perdonó." },
+        { id: "trabajo", label: "🛠️ Trabajo", cita: "Colosenses 3:23", consejo: "Hazlo todo de corazón como para el Señor." },
+        { id: "hijos", label: "👶 Hijos", cita: "Proverbios 22:6", consejo: "Instruirlos hoy asegura su camino mañana." },
+        { id: "matrimonio", label: "💍 Matrimonio", cita: "Eclesiastés 4:12", consejo: "Cordón de tres dobleces no se rompe pronto." },
+        { id: "soledad", label: "🚶 Soledad", cita: "Mateo 28:20", consejo: "Él prometió estar contigo todos los días." },
+        { id: "rabia", label: "🔥 Rabia", cita: "Efesios 4:26", consejo: "No dejes que el sol se ponga sobre tu enojo." },
+        { id: "fe", label: "✨ Fe", cita: "Hebreos 11:1", consejo: "Es la convicción de lo que aún no puedes ver." },
+        { id: "sabiduria", label: "💡 Sabiduría", cita: "Santiago 1:5", consejo: "Si te falta sabiduría, pídela y Él te la dará." },
+        { id: "futuro", label: "⚓ Futuro", cita: "Jeremías 29:11", consejo: "Sus planes son para darte bienestar y esperanza." },
+        { id: "tentacion", label: "🚫 Tentación", cita: "1 Corintios 10:13", consejo: "Él siempre te dará la salida para poder resistir." },
+        { id: "fuerza", label: "💪 Fuerza", cita: "Filipenses 4:13", consejo: "Tu capacidad viene de Cristo que te fortalece." },
+        { id: "paciencia", label: "⏳ Paciencia", cita: "Gálatas 6:9", consejo: "No te canses de hacer el bien, a su tiempo segarás." },
+        { id: "amor", label: "❤️ Amor", cita: "1 Corintios 13:4", consejo: "El amor todo lo sufre, todo lo cree, todo lo espera." },
+        { id: "paz", label: "🕊️ Paz", cita: "Juan 14:27", consejo: "Su paz no es como la del mundo, es permanente." }
+    ];
 
+    // CARGAR PDF AL INICIAR
     pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
         pdfDoc = doc;
-        document.getElementById('status').innerText = "Biblia cargada. Lista para buscar referencias.";
+        document.getElementById('status').innerText = "Biblia preparada. Selecciona tus temas.";
+        document.getElementById('btnRun').disabled = false;
+        renderizarBotones();
     });
 
-    async function startSearch() {
-        const query = document.getElementById('query').value.trim();
-        if (query.length < 3) return;
-
-        const resultsDiv = document.getElementById('results');
-        const progBar = document.getElementById('progBar');
-        const status = document.getElementById('status');
-        
-        resultsDiv.innerHTML = "";
-        document.getElementById('progBox').style.display = "block";
-        let foundCount = 0;
-
-        for (let i = 1; i <= pdfDoc.numPages; i++) {
-            progBar.style.width = (i / pdfDoc.numPages * 100) + "%";
-            status.innerText = `Escaneando página ${i}...`;
-
-            const page = await pdfDoc.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map(item => item.str).join(" ");
-
-            if (pageText.toLowerCase().includes(query.toLowerCase())) {
-                foundCount++;
-                
-                // INTENTAR DETECTAR EL LIBRO Y CAPÍTULO EN ESTA PÁGINA
-                let libroDetectado = "Desconocido";
-                for (let libro of librosBiblia) {
-                    if (pageText.includes(libro.toUpperCase()) || pageText.includes(libro)) {
-                        libroDetectado = libro;
-                    }
-                }
-
-                // Intentar encontrar el número de capítulo (Busca palabras como "Génesis 1" o "Capítulo 1")
-                const capMatch = pageText.match(new RegExp(`${libroDetectado}\\s+(\\d+)`, 'i')) || pageText.match(/Capítulo\s+(\d+)/i);
-                let capitulo = capMatch ? capMatch[1] : "?";
-
-                // Buscar el versículo (el número pequeño antes de la palabra)
-                const index = pageText.toLowerCase().indexOf(query.toLowerCase());
-                const preText = pageText.substring(Math.max(0, index - 50), index);
-                const versiculoMatch = preText.match(/(\d+)\s+/g);
-                let versiculo = versiculoMatch ? versiculoMatch[versiculoMatch.length - 1].trim() : "X";
-
-                createResultCard(libroDetectado, capitulo, versiculo, pageText, query, i, resultsDiv);
-                
-                if (foundCount >= 20) break;
-            }
-        }
-        status.innerText = `Búsqueda finalizada. Se encontraron ${foundCount} referencias.`;
+    function renderizarBotones() {
+        const panel = document.getElementById('panelTemas');
+        diccionario.forEach(tema => {
+            const btn = document.createElement('button');
+            btn.className = 'tag-btn';
+            btn.innerText = tema.label;
+            btn.onclick = () => alternarTema(tema.id, btn);
+            panel.appendChild(btn);
+        });
     }
 
-    function createResultCard(libro, cap, ver, text, query, page, container) {
-        const index = text.toLowerCase().indexOf(query.toLowerCase());
-        const context = text.substring(Math.max(0, index - 150), Math.min(text.length, index + 300));
-        
-        const card = document.createElement('div');
-        card.className = 'result-card';
-        
-        const regex = new RegExp(`(${query})`, 'gi');
-        const highlighted = context.replace(regex, '<mark>$1</mark>');
+    function alternarTema(id, btn) {
+        if (seleccionados.has(id)) {
+            seleccionados.delete(id);
+            btn.classList.remove('active');
+        } else {
+            seleccionados.add(id);
+            btn.classList.add('active');
+        }
+        document.getElementById('contador').innerText = `${seleccionados.size} temas seleccionados`;
+    }
 
-        card.innerHTML = `
-            <div class="reference-header">${libro} ${cap}:${ver}</div>
-            <span class="page-tag">Pág. ${page}</span>
-            <div class="verse-text">"...${highlighted}..."</div>
-        `;
-        container.appendChild(card);
+    async function buscarMultiplesTemas() {
+        const contenedor = document.getElementById('resultados');
+        const status = document.getElementById('status');
+        contenedor.innerHTML = "";
+        
+        if (seleccionados.size === 0) return alert("Selecciona al menos un tema.");
+
+        status.innerText = "Escaneando el PDF en busca de tus respuestas...";
+        
+        for (let id of seleccionados) {
+            const info = diccionario.find(t => t.id === id);
+            await extraerDelPDF(info);
+        }
+        
+        status.innerText = "Guía completada.";
+        window.scrollTo({ top: document.getElementById('resultados').offsetTop, behavior: 'smooth' });
+    }
+
+    async function extraerDelPDF(info) {
+        const [libro, resto] = info.cita.split(' ');
+        const contenedor = document.getElementById('resultados');
+
+        // Escaneo optimizado
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            const text = textContent.items.map(item => item.str).join(" ");
+
+            if (text.includes(libro.toUpperCase()) && text.includes(info.cita.split(' ')[1])) {
+                const idx = text.indexOf(info.cita.split(' ')[1]);
+                const fragmento = text.substring(idx, idx + 350);
+
+                const card = document.createElement('div');
+                card.className = 'card-result';
+                card.innerHTML = `
+                    <span class="ref-header">📍 ${info.cita} (${info.label})</span>
+                    <div class="verse-text">"${fragmento}..."</div>
+                    <div class="advice">💡 Consejo: ${info.consejo}</div>
+                `;
+                contenedor.appendChild(card);
+                break;
+            }
+        }
     }
 </script>
 

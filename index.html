@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Bíblico PDF - RV1960</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .container { background: white; width: 100%; max-width: 800px; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #2e7d32; text-align: center; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; }
+        button { padding: 12px 20px; background: #2e7d32; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #ccc; }
+        #estado { text-align: center; color: #666; font-size: 14px; margin-bottom: 10px; }
+        .versiculo-resultado { background: #f9f9f9; padding: 15px; border-left: 5px solid #2e7d32; margin-bottom: 10px; border-radius: 4px; }
+        .pagina-ref { font-size: 11px; color: #999; display: block; margin-top: 5px; }
+        mark { background: #ffeb3b; padding: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📖 Buscador en PDF RV1960</h1>
+    <p id="estado">Cargando PDF... por favor espera.</p>
+
+    <div class="search-box">
+        <input type="text" id="inputBusqueda" placeholder="Escribe un tema (ej: fe, amor, esperanza)...">
+        <button id="btnBuscar" onclick="buscarEnPDF()" disabled>BUSCAR EN PDF</button>
+    </div>
+
+    <div id="resultados"></div>
+</div>
+
+<script>
+    // Configuración de PDF.js
+    const pdfUrl = 'Santa-Biblia-RV1960-ES.pdf'; // Nombre de tu archivo
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    let pdfDoc = null;
+
+    // Cargar el PDF al iniciar
+    pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
+        pdfDoc = doc;
+        document.getElementById('estado').innerText = "PDF Cargado. Listo para buscar.";
+        document.getElementById('btnBuscar').disabled = false;
+    }).catch(err => {
+        document.getElementById('estado').innerText = "Error: Asegúrate de que el PDF esté en la misma carpeta y abras esto con un servidor local.";
+        console.error(err);
+    });
+
+    async function buscarEnPDF() {
+        const palabra = document.getElementById('inputBusqueda').value.trim();
+        const contenedor = document.getElementById('resultados');
+        const btn = document.getElementById('btnBuscar');
+
+        if (palabra.length < 3) {
+            alert("Escribe al menos 3 letras para buscar.");
+            return;
+        }
+
+        contenedor.innerHTML = "";
+        btn.disabled = true;
+        document.getElementById('estado').innerText = "Escaneando páginas de la Biblia...";
+
+        let hallazgos = 0;
+
+        // Recorremos todas las páginas del PDF
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const content = await page.getTextContent();
+            const text = content.items.map(item => item.str).join(" ");
+
+            // Si el texto contiene la palabra (ignorando mayúsculas/minúsculas)
+            if (text.toLowerCase().includes(palabra.toLowerCase())) {
+                hallazgos++;
+                
+                // Extraer un fragmento del texto donde aparece la palabra
+                const index = text.toLowerCase().indexOf(palabra.toLowerCase());
+                const fragmento = text.substring(index - 100, index + 200); // Tomamos contexto alrededor
+
+                const div = document.createElement('div');
+                div.className = 'versiculo-resultado';
+                
+                // Resaltar la palabra buscada
+                const regex = new RegExp(`(${palabra})`, 'gi');
+                const textoResaltado = fragmento.replace(regex, '<mark>$1</mark>');
+
+                div.innerHTML = `
+                    <span>...${textoResaltado}...</span>
+                    <span class="pagina-ref">Encontrado en la Página ${i} del PDF</span>
+                `;
+                contenedor.appendChild(div);
+
+                // Límite para no saturar la pantalla si hay cientos de resultados
+                if (hallazgos >= 50) {
+                    document.getElementById('estado').innerText = "Se encontraron muchos resultados. Mostrando los primeros 50.";
+                    break;
+                }
+            }
+            
+            // Actualizar progreso cada 50 páginas
+            if (i % 50 === 0) {
+                document.getElementById('estado').innerText = `Buscando... página ${i} de ${pdfDoc.numPages}`;
+            }
+        }
+
+        if (hallazgos === 0) {
+            document.getElementById('estado').innerText = "No se encontraron resultados.";
+        } else if (hallazgos < 50) {
+            document.getElementById('estado').innerText = `Se encontraron ${hallazgos} menciones de "${palabra}".`;
+        }
+        
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
